@@ -10,6 +10,12 @@ pipeline {
 
     agent any
     
+    tools {
+        
+        maven 'Maven-3.6.3'
+        
+    }
+    
     environment {
         ORG_NAME = "learnwithvinod"
         APP_NAME = "deors-demos-java-pipeline"
@@ -24,14 +30,14 @@ pipeline {
         stage('Compile') {
             steps {
                 echo "-=- compiling project -=-"
-                sh "./mvnw clean compile"
+                sh "mvn clean compile"
             }
         }
 
         stage('Unit tests') {
             steps {
                 echo "-=- execute unit tests -=-"
-                sh "./mvnw test org.jacoco:jacoco-maven-plugin:report"
+                sh "mvn test org.jacoco:jacoco-maven-plugin:report"
                 junit 'target/surefire-reports/*.xml'
                 jacoco execPattern: 'target/jacoco.exec'
             }
@@ -40,14 +46,14 @@ pipeline {
         stage('Mutation tests') {
             steps {
                 echo "-=- execute mutation tests -=-"
-                sh "./mvnw org.pitest:pitest-maven:mutationCoverage"
+                sh "mvn org.pitest:pitest-maven:mutationCoverage"
             }
         }
 
         stage('Package') {
             steps {
                 echo "-=- packaging project -=-"
-                sh "./mvnw package -DskipTests"
+                sh "mvn package -DskipTests"
                 archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
@@ -70,7 +76,7 @@ pipeline {
             steps {
                 echo "-=- execute integration tests -=-"
                 sh "curl --retry 5 --retry-connrefused --connect-timeout 5 --max-time 5 http://${TEST_CONTAINER_NAME}:${APP_LISTENING_PORT}/${APP_CONTEXT_ROOT}/actuator/health"
-                sh "./mvnw failsafe:integration-test failsafe:verify -DargLine=\"-Dtest.selenium.hub.url=http://selenium-hub:4444/wd/hub -Dtest.target.server.url=http://${TEST_CONTAINER_NAME}:${APP_LISTENING_PORT}/${APP_CONTEXT_ROOT}\""
+                sh "mvn failsafe:integration-test failsafe:verify -DargLine=\"-Dtest.selenium.hub.url=http://selenium-hub:4444/wd/hub -Dtest.target.server.url=http://${TEST_CONTAINER_NAME}:${APP_LISTENING_PORT}/${APP_CONTEXT_ROOT}\""
                 sh "java -jar target/dependency/jacococli.jar dump --address ${TEST_CONTAINER_NAME} --port 6300 --destfile target/jacoco-it.exec"
                 sh "mkdir target/site/jacoco-it"
                 sh "java -jar target/dependency/jacococli.jar report target/jacoco-it.exec --classfiles target/classes --xml target/site/jacoco-it/jacoco.xml"
@@ -82,7 +88,7 @@ pipeline {
         stage('Performance tests') {
             steps {
                 echo "-=- execute performance tests -=-"
-                sh "./mvnw jmeter:configure jmeter:jmeter jmeter:results -Djmeter.target.host=${TEST_CONTAINER_NAME} -Djmeter.target.port=${APP_LISTENING_PORT} -Djmeter.target.root=${APP_CONTEXT_ROOT}"
+                sh "mvn jmeter:configure jmeter:jmeter jmeter:results -Djmeter.target.host=${TEST_CONTAINER_NAME} -Djmeter.target.port=${APP_LISTENING_PORT} -Djmeter.target.root=${APP_CONTEXT_ROOT}"
                 perfReport sourceDataFiles: 'target/jmeter/results/*.csv', errorUnstableThreshold: 0, errorFailedThreshold: 5, errorUnstableResponseTimeThreshold: 'default.jtl:100'
             }
         }
@@ -106,7 +112,7 @@ pipeline {
         stage('Dependency vulnerability tests') {
             steps {
                 echo "-=- run dependency vulnerability tests -=-"
-                sh "./mvnw dependency-check:check"
+                sh "mvn dependency-check:check"
                 dependencyCheckPublisher failedTotalHigh: 2, unstableTotalHigh: 2, failedTotalMedium: 5, unstableTotalMedium: 5
             }
         }
@@ -115,7 +121,7 @@ pipeline {
 //            steps {
 //                echo "-=- run code inspection & check quality gate -=-"
 //                withSonarQubeEnv('ci-sonarqube') {
-//                    sh "./mvnw sonar:sonar"
+//                    sh "mvn sonar:sonar"
 //                }
 //                timeout(time: 10, unit: 'MINUTES') {
 //                    //waitForQualityGate abortPipeline: true
