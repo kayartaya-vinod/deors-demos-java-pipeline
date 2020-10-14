@@ -9,7 +9,7 @@ pipeline {
     }
 
     environment {
-        ORG_NAME = "deors"
+        ORG_NAME = "learnwithvinod"
         APP_NAME = "deors-demos-java-pipeline"
         APP_VERSION = "1.0-SNAPSHOT"
         APP_CONTEXT_ROOT = "/"
