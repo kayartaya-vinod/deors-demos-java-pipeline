@@ -1,13 +1,15 @@
 #!groovy
 
 pipeline {
-    agent {
-        docker {
-            image 'adoptopenjdk/openjdk11:jdk-11.0.5_10-debian'
-            args '--network ci --mount type=volume,source=ci-maven-home,target=/root/.m2'
-        }
-    }
+//    agent {
+//        docker {
+//            image 'adoptopenjdk/openjdk11:jdk-11.0.5_10-debian'
+//            args '--network ci --mount type=volume,source=ci-maven-home,target=/root/.m2'
+//        }
+//    }
 
+    agent any
+    
     environment {
         ORG_NAME = "learnwithvinod"
         APP_NAME = "deors-demos-java-pipeline"
